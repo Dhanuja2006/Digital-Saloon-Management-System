@@ -19,9 +19,10 @@ export const protect = async (req, res, next) => {
         const decoded = jwt.verify(token, ENV.JWT_ACCESS_SECRET);
         req.user = await User.findById(decoded.id);
 
-        if (!req.user || req.user.status === "Suspended") {
-            return res.status(401).json({ message: "User not found or suspended" });
+        if (!req.user || req.user.status === "Suspended" || req.user.isBlocked) {
+            return res.status(401).json({ message: "User not found, suspended, or blocked" });
         }
+
 
         next();
     } catch (error) {

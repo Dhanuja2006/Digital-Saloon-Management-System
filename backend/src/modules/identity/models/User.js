@@ -45,10 +45,52 @@ const userSchema = new mongoose.Schema(
             enum: ["Active", "Suspended", "Pending"],
             default: "Active",
         },
+        isBlocked: {
+            type: Boolean,
+            default: false,
+        },
+        profileImage: {
+            type: String,
+        },
+        // Customer Profile Fields
+        gender: {
+            type: String,
+            enum: ["male", "female", "other"],
+        },
+        dateOfBirth: {
+            type: Date,
+        },
+        preferences: {
+            hairType: String,
+            stylePreference: String,
+        },
+        // Salon Owner Profile Fields
+        salonName: {
+            type: String,
+            trim: true,
+        },
+        salonAddress: {
+            type: String,
+            trim: true,
+        },
+        city: {
+            type: String,
+            trim: true,
+        },
+        description: {
+            type: String,
+            trim: true,
+        },
+        workingHours: {
+            open: { type: String },
+            close: { type: String },
+        },
+
         refreshToken: {
             type: String,
             select: false,
         },
+
     },
     {
         timestamps: true,

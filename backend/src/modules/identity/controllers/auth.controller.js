@@ -57,8 +57,8 @@ export const signup = async (req, res) => {
         });
 
         res.status(201).json({
-            message: role === "Salon Owner" 
-                ? "Registration successful. Please wait for Admin approval." 
+            message: role === "Salon Owner"
+                ? "Registration successful. Please wait for Admin approval."
                 : "User registered successfully.",
             userId: user._id,
         });
@@ -86,6 +86,11 @@ export const login = async (req, res) => {
         if (user.status === "Pending") {
             return res.status(403).json({ message: "Your account is awaiting admin approval" });
         }
+
+        if (user.isBlocked) {
+            return res.status(403).json({ message: "Your account has been blocked" });
+        }
+
 
         if (!user.isEmailVerified) {
             return res.status(403).json({ message: "Please verify your email before logging in" });
@@ -201,7 +206,7 @@ export const requestEmailVerification = async (req, res) => {
         if (!user) return res.status(404).json({ message: "User not found" });
 
         const otp = await generateOTP(user._id, "email_verification");
-        
+
         await sendEmail(email, "HSM Email Verification", `Your verification code is: ${otp}`);
 
         res.status(200).json({ message: "Verification OTP sent to your email" });
@@ -227,4 +232,72 @@ export const verifyEmail = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+export const getMe = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+export const uploadProfileImage = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "No image file provided" });
+        }
+
+        const userId = req.user._id;
+        const imagePath = `/uploads/profiles/${req.file.filename}`;
+
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { profileImage: imagePath },
+            { new: true }
+        );
+
+        res.status(200).json({
+            message: "Profile image uploaded successfully",
+            profileImage: imagePath,
+            user,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+export const updateProfile = async (req, res) => {
+    try {
+
+        const userId = req.user._id;
+        const { role } = req.user;
+        const updates = req.body;
+
+        // Prevent updating sensitive fields
+        delete updates.password;
+        delete updates.role;
+        delete updates.email;
+        delete updates.status;
+        delete updates.isBlocked;
+        delete updates.isEmailVerified;
+
+        // If ownerName is provided, map it to fullName
+        if (updates.ownerName) {
+            updates.fullName = updates.ownerName;
+            delete updates.ownerName;
+        }
+
+        const user = await User.findByIdAndUpdate(userId, updates, {
+            new: true,
+            runValidators: true,
+        });
+
+        res.status(200).json({
+            message: "Profile updated successfully",
+            user,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 
