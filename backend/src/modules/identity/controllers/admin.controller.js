@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import AuditLog from "../models/AuditLog.js";
+import { ENV } from "../../../config/env.js";
 
 export const getAllSalons = async (req, res) => {
     try {
@@ -15,7 +16,7 @@ export const updateSalonStatus = async (req, res) => {
         const { id } = req.params;
         const { status, adminCode } = req.body; // Active, Suspended
 
-        const secretAdminCode = process.env.ADMIN_CODE || "1234";
+        const secretAdminCode = ENV.ADMIN_CODE || "1234";
         if (adminCode !== secretAdminCode) {
             return res.status(403).json({ message: "Invalid Admin Code" });
         }

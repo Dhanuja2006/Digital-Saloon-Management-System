@@ -33,7 +33,7 @@ export const signup = async (req, res) => {
         const { fullName, email, phone, password, role, adminCode } = req.body;
 
         if (role === "Admin") {
-            const secretAdminCode = process.env.ADMIN_CODE || "1234";
+            const secretAdminCode = ENV.ADMIN_CODE || "1234";
             if (adminCode !== secretAdminCode) {
                 return res.status(403).json({ message: "Invalid Admin Code" });
             }

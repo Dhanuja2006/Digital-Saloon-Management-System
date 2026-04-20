@@ -1,6 +1,10 @@
 backend/node_modules
 backend/.env
+backend/POSTMAN_TESTING_GUIDE.md
 .DS_Store
 backend/uploads
 *.log
-
+*.postman_collection.json
+*.postman_environment.json
+.vscode/
+.env

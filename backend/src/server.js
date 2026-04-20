@@ -1,14 +1,15 @@
 import express from "express";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
-
-
 import connectDB from "./config/db.js";
 import { ENV } from "./config/env.js";
 
 // Routes Imports
 import authRoutes from "./modules/identity/routes/auth.routes.js";
 import adminRoutes from "./modules/identity/routes/admin.routes.js";
+import salonRoutes from "./modules/salon/routes/salon.routes.js";
+import serviceRoutes from "./modules/service/routes/service.routes.js";
+import slotRoutes from "./modules/slot/routes/slot.routes.js";
 // import bookingRoutes from "./modules/booking/routes/booking.routes.js";
 
 const app = express();
@@ -27,6 +28,9 @@ app.use("/uploads", express.static("uploads"));
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/salons", salonRoutes);
+app.use("/api/services", serviceRoutes);
+app.use("/api/slots", slotRoutes);
 
 app.get("/", (req, res) => {
     res.send("Digital Salon Management System API is running...");

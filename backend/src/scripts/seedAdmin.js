@@ -1,12 +1,10 @@
 import mongoose from "mongoose";
-import dotenv from "dotenv";
+import { ENV } from "../config/env.js";
 import User from "../modules/identity/models/User.js";
-
-dotenv.config();
 
 const seedAdmin = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI);
+        await mongoose.connect(ENV.MONGO_URI);
         console.log("MongoDB Connected for Seeding...");
 
         const adminEmail = "admin@hsm.com";
