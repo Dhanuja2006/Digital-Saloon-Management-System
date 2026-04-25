@@ -1,14 +1,19 @@
 # Digital Hair Salon Management System
 
-A production-grade, monolithic layered MVC backend for managing digital salons. This system supports a scalable **Multi-Shop Ownership** model, allowing a single salon owner to register and manage multiple branches with centralized admin approval and robust booking workflows.
+A production-grade, modular layered MVC backend for managing digital salons. This system supports a scalable **Multi-Shop Ownership** model, allowing a single salon owner to register and manage multiple branches with centralized admin approval and robust booking workflows.
 
 ---
 
 ## 🌟 Key Features
 
+### 👤 Customer Experience Layer
+- **Advanced Discovery**: Search and filter salons by city, service category, and rating.
+- **Personalized Profiles**: Manage preferences, loyalty points, and profile images.
+- **Social Features**: Add salons to favorites (Wishlist) and track "Recently Viewed" history.
+
 ### 🏢 Multi-Shop Management
 - **Enterprise Ready**: Owners can manage multiple salon locations under one account.
-- **Branch-Specific Data**: Each salon maintains its own services, slots, and bookings.
+- **Branch-Specific Data**: Each salon maintains its own services, slots, and ratings.
 
 ### 🛡️ Secure Authentication & Authorization
 - **Role-Based Access Control (RBAC)**: Distinct flows for **Customers**, **Salon Owners**, and **Admins**.
@@ -21,11 +26,15 @@ A production-grade, monolithic layered MVC backend for managing digital salons. 
 ### 🗓️ Smart Slot & Booking System
 - **Automated Slot Generation**: Owners can generate daily time slots with custom durations and capacities.
 - **Concurrency Control**: Prevents duplicate slot generation and double bookings.
-- **Slot Locking**: (Planned) Industry-standard slot locking during the checkout process.
 
-### 👤 Profile & Admin Workflows
-- **Admin Approval**: Salon owners must be verified by an admin before they can start managing shops.
-- **Profile Management**: Users can update details and upload profile images via Multer.
+### 💬 Review & Trust System
+- **Verified Reviews**: Customers can only review salons after a completed booking.
+- **Dynamic Ratings**: Auto-recalculation of salon average ratings and review counts.
+- **Moderation**: 24-hour edit window for reviews and soft-delete support.
+
+### 🔔 Notification System
+- **Multi-Channel**: Supports In-app notifications and Email alerts.
+- **Real-time Tracking**: Monitor unread/read status for booking, payment, and admin updates.
 
 ---
 
@@ -92,10 +101,16 @@ A production-grade, monolithic layered MVC backend for managing digital salons. 
 
 ## 🧪 Testing
 
-The API can be tested using Postman. A detailed testing guide with all endpoints and request flows is maintained internally.
+The API can be tested using Postman. The system uses a modular route structure for easy testing.
 
-> [!NOTE]
-> For security, the `.env` and `POSTMAN_TESTING_GUIDE.md` files are ignored in this repository.
+### Key API Prefixes:
+- `Identity`: `/api/auth`
+- `Customer`: `/api/users`
+- `Salons`: `/api/salons`
+- `Services`: `/api/services`
+- `Slots`: `/api/slots`
+- `Reviews`: `/api/reviews`
+- `Notifications`: `/api/notifications`
 
 ---
 
@@ -105,18 +120,17 @@ The API can be tested using Postman. A detailed testing guide with all endpoints
 backend/
 ├── src/
 │   ├── config/         # Environment & Database config
+│   ├── middleware/     # Auth, Upload, and Rate Limiting
 │   ├── modules/
-│   │   ├── auth/       # OTP, JWT, and Profile logic
-│   │   ├── admin/      # Multi-shop approval workflows
+│   │   ├── identity/   # Auth logic (Signup/Login/OTP)
+│   │   ├── customer/   # Profile, Discovery, and Favorites
+│   │   ├── review/     # Feedback & Rating logic
+│   │   ├── notification/# In-app & Email alerts
 │   │   ├── salon/      # Shop management
 │   │   ├── service/    # Service catalogs
 │   │   └── slot/       # Booking & Slot generation
-│   ├── utils/          # Global helpers (AppError, catchAsync)
+│   ├── utils/          # Global helpers (AppError, Email)
 │   └── server.js       # Entry point
 ```
 
----
 
-## 📄 License
-
-This project is licensed under the ISC License.

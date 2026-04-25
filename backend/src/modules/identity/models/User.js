@@ -90,7 +90,23 @@ const userSchema = new mongoose.Schema(
             type: String,
             select: false,
         },
-
+        // Customer Behavioral Data
+        favorites: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Salon",
+            },
+        ],
+        recentlyViewed: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Salon",
+            },
+        ],
+        loyaltyPoints: {
+            type: Number,
+            default: 0,
+        },
     },
     {
         timestamps: true,

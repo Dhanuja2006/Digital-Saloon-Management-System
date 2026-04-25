@@ -10,6 +10,9 @@ import adminRoutes from "./modules/identity/routes/admin.routes.js";
 import salonRoutes from "./modules/salon/routes/salon.routes.js";
 import serviceRoutes from "./modules/service/routes/service.routes.js";
 import slotRoutes from "./modules/slot/routes/slot.routes.js";
+import customerRoutes from "./modules/customer/routes/customer.routes.js";
+import reviewRoutes from "./modules/review/routes/review.routes.js";
+import notificationRoutes from "./modules/notification/routes/notification.routes.js";
 // import bookingRoutes from "./modules/booking/routes/booking.routes.js";
 
 const app = express();
@@ -31,6 +34,9 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/salons", salonRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/slots", slotRoutes);
+app.use("/api/users", customerRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/", (req, res) => {
     res.send("Digital Salon Management System API is running...");
