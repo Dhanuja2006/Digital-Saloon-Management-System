@@ -1,6 +1,10 @@
 import express from "express";
+import path from "path";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import compression from "compression";
+import { nosqlSanitize } from "./middleware/sanitize.middleware.js";
+import rateLimit from "express-rate-limit";
 import connectDB from "./config/db.js";
 import { ENV } from "./config/env.js";
 
@@ -13,19 +17,45 @@ import slotRoutes from "./modules/slot/routes/slot.routes.js";
 import customerRoutes from "./modules/customer/routes/customer.routes.js";
 import reviewRoutes from "./modules/review/routes/review.routes.js";
 import notificationRoutes from "./modules/notification/routes/notification.routes.js";
-// import bookingRoutes from "./modules/booking/routes/booking.routes.js";
+import bookingRoutes from "./modules/booking/routes/booking.routes.js";
 
 const app = express();
 
+// 🛡️ SECURITY MIDDLEWARE (DAST Optimization)
+app.use(helmet({
+    crossOriginResourcePolicy: false,
+})); // Sets various HTTP headers for security
+app.use(nosqlSanitize); // Prevents NoSQL injection (Custom Express 5 compatible)
+
+// 🚀 PERFORMANCE MIDDLEWARE
+app.use(compression()); // Compresses response bodies for better performance
+
+// Rate Limiting (Prevents Brute Force/DoS)
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: "Too many requests from this IP, please try again after 15 minutes",
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use("/api", limiter);
+
 // Security Middleware
-app.use(helmet());
+import cors from "cors";
+app.use(cors({ 
+    origin: process.env.CLIENT_URL || "http://localhost:5173", 
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
 
+const __dirname = path.resolve();
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: "10kb" })); // Body limit to prevent DoS via large JSON
 app.use(cookieParser());
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 // Routes
@@ -37,6 +67,7 @@ app.use("/api/slots", slotRoutes);
 app.use("/api/users", customerRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 app.get("/", (req, res) => {
     res.send("Digital Salon Management System API is running...");
@@ -44,8 +75,40 @@ app.get("/", (req, res) => {
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    // Log error for debugging
+    if (ENV.NODE_ENV === "development") {
+        console.error("Error Name:", err.name);
+        console.error("Error Message:", err.message);
+    }
+
+    // Mongoose Validation Error
+    if (err.name === "ValidationError") {
+        const messages = Object.values(err.errors).map(val => val.message);
+        return res.status(400).json({
+            success: false,
+            message: `Validation Error: ${messages.join(", ")}`,
+        });
+    }
+
+    // Mongoose Cast Error (Invalid ID)
+    if (err.name === "CastError") {
+        return res.status(400).json({
+            success: false,
+            message: `Invalid ${err.path}: ${err.value}`,
+        });
+    }
+
+    // Duplicate Key Error
+    if (err.code === 11000) {
+        const field = Object.keys(err.keyValue)[0];
+        return res.status(400).json({
+            success: false,
+            message: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`,
+        });
+    }
+
     res.status(err.status || 500).json({
+        success: false,
         message: err.message || "Internal Server Error",
     });
 });

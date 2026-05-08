@@ -20,7 +20,7 @@ class CustomerController {
             forbidden.forEach((field) => delete updates[field]);
 
             const user = await User.findByIdAndUpdate(req.user.id, updates, {
-                new: true,
+                returnDocument: 'after',
                 runValidators: true,
             });
             res.status(200).json({ success: true, message: "Profile updated", data: user });
@@ -33,7 +33,7 @@ class CustomerController {
         try {
             if (!req.file) return res.status(400).json({ message: "No file uploaded" });
             const imagePath = `/uploads/profiles/${req.file.filename}`;
-            const user = await User.findByIdAndUpdate(req.user.id, { profileImage: imagePath }, { new: true });
+            const user = await User.findByIdAndUpdate(req.user.id, { profileImage: imagePath }, { returnDocument: 'after' });
             res.status(200).json({ success: true, profileImage: imagePath, data: user });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });

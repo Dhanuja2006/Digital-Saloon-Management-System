@@ -56,11 +56,16 @@ export const signup = async (req, res) => {
             status: userStatus,
         });
 
+        // Generate and send verification OTP
+        const otp = await generateOTP(user._id, "email_verification");
+        await sendEmail(email, "HSM Email Verification", `Your verification code is: ${otp}`);
+
         res.status(201).json({
             message: role === "Salon Owner"
-                ? "Registration successful. Please wait for Admin approval."
-                : "User registered successfully.",
+                ? "Registration successful. Please wait for Admin approval. A verification code has been sent to your email."
+                : "User registered successfully. A verification code has been sent to your email.",
             userId: user._id,
+            email: user.email // Added email to response
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -253,7 +258,7 @@ export const uploadProfileImage = async (req, res) => {
         const user = await User.findByIdAndUpdate(
             userId,
             { profileImage: imagePath },
-            { new: true }
+            { returnDocument: 'after' }
         );
 
         res.status(200).json({
@@ -287,7 +292,7 @@ export const updateProfile = async (req, res) => {
         }
 
         const user = await User.findByIdAndUpdate(userId, updates, {
-            new: true,
+            returnDocument: 'after',
             runValidators: true,
         });
 
