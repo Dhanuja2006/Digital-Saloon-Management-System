@@ -9,7 +9,8 @@ const Register = () => {
     email: '',
     phone: '',
     password: '',
-    role: 'Customer' // default role
+    role: 'Customer', // default role
+    adminCode: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,8 +32,10 @@ const Register = () => {
     
     try {
       const data = await authController.register(formData);
-      // Navigate to verification page
-      navigate(`/verify-email?email=${data.email || formData.email}`);
+      // Navigate to verification page with demoOTP if it exists
+      const query = new URLSearchParams({ email: data.email || formData.email });
+      if (data.demoOTP) query.append('otp', data.demoOTP);
+      navigate(`/verify-email?${query.toString()}`);
     } catch (err) {
       setError(err.message || 'Failed to register');
     } finally {
@@ -102,8 +105,24 @@ const Register = () => {
             >
               <option value="Customer">Customer</option>
               <option value="Salon Owner">Salon Owner</option>
+              <option value="Admin">Admin</option>
             </select>
           </div>
+
+          {formData.role === 'Admin' && (
+            <div className="form-group">
+              <label className="form-label">Admin Secret Code</label>
+              <input 
+                type="password" 
+                name="adminCode"
+                className="form-input" 
+                placeholder="Enter secret code"
+                value={formData.adminCode} 
+                onChange={handleChange} 
+                required 
+              />
+            </div>
+          )}
           <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
             {loading ? 'Creating Account...' : 'Sign Up'}
           </button>

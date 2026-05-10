@@ -58,15 +58,25 @@ export const signup = async (req, res) => {
 
         // Generate and send verification OTP
         const otp = await generateOTP(user._id, "email_verification");
-        await sendEmail(email, "HSM Email Verification", `Your verification code is: ${otp}`);
-
-        res.status(201).json({
-            message: role === "Salon Owner"
-                ? "Registration successful. Please wait for Admin approval. A verification code has been sent to your email."
-                : "User registered successfully. A verification code has been sent to your email.",
-            userId: user._id,
-            email: user.email // Added email to response
-        });
+        
+        try {
+            await sendEmail(email, "HSM Email Verification", `Your verification code is: ${otp}`);
+            res.status(201).json({
+                message: role === "Salon Owner"
+                    ? "Registration successful. Please wait for Admin approval. A verification code has been sent to your email."
+                    : "User registered successfully. A verification code has been sent to your email.",
+                userId: user._id,
+                email: user.email
+            });
+        } catch (error) {
+            // Fallback for restricted environments like Render Free Tier
+            res.status(201).json({
+                message: "Registration successful, but email sending failed due to hosting restrictions.",
+                userId: user._id,
+                email: user.email,
+                demoOTP: otp // Provide the OTP directly for the frontend to display
+            });
+        }
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -172,11 +182,16 @@ export const forgotPassword = async (req, res) => {
 
         const otp = await generateOTP(user._id, "password_reset");
 
-        await sendEmail(email, "HSM Password Reset", `Your password reset code is: ${otp}`);
-
+        try {
+            await sendEmail(email, "HSM Password Reset", `Your password reset code is: ${otp}`);
+            res.status(200).json({ message: "Reset OTP sent to your email" });
+        } catch (error) {
+            res.status(200).json({ 
+                message: "Email sending failed due to hosting restrictions.", 
+                demoOTP: otp 
+            });
+        }
         await logAudit(user._id, "PASSWORD_RESET_REQUEST", "SUCCESS", req);
-
-        res.status(200).json({ message: "Reset OTP sent to your email" });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -212,9 +227,15 @@ export const requestEmailVerification = async (req, res) => {
 
         const otp = await generateOTP(user._id, "email_verification");
 
-        await sendEmail(email, "HSM Email Verification", `Your verification code is: ${otp}`);
-
-        res.status(200).json({ message: "Verification OTP sent to your email" });
+        try {
+            await sendEmail(email, "HSM Email Verification", `Your verification code is: ${otp}`);
+            res.status(200).json({ message: "Verification OTP sent to your email" });
+        } catch (error) {
+            res.status(200).json({ 
+                message: "Email sending failed due to hosting restrictions.", 
+                demoOTP: otp 
+            });
+        }
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -16,8 +16,14 @@ const VerifyEmail = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const emailParam = params.get('email');
+    const otpParam = params.get('otp');
     if (emailParam) {
       setEmail(emailParam);
+    }
+    if (otpParam) {
+      setOtp(otpParam);
+      setStep(2);
+      setMessage('Render Free Tier restriction detected. Email could not be sent, so your code is displayed below.');
     }
   }, [location]);
 
@@ -27,8 +33,13 @@ const VerifyEmail = () => {
     setMessage('');
     setLoading(true);
     try {
-      await authController.resendOTP(email);
-      setMessage('Verification code sent! Please check your terminal console.');
+      const data = await authController.resendOTP(email);
+      if (data.demoOTP) {
+        setOtp(data.demoOTP);
+        setMessage('Render Free Tier restriction detected. Code displayed below:');
+      } else {
+        setMessage('Verification code sent! Please check your email.');
+      }
       setStep(2);
     } catch (err) {
       setError(err.message || 'Failed to send code');
@@ -88,9 +99,24 @@ const VerifyEmail = () => {
           <>
             <p className="text-center mb-4" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
               Code sent to <strong>{email}</strong>. 
-              <br />
-              <span style={{ fontSize: '0.8rem', color: 'var(--primary)' }}>(Check your terminal console)</span>
             </p>
+            {otp && (
+              <div style={{ 
+                background: 'rgba(255, 193, 7, 0.1)', 
+                border: '1px solid #ffc107', 
+                borderRadius: '8px', 
+                padding: '10px', 
+                marginBottom: '1rem', 
+                textAlign: 'center' 
+              }}>
+                <span style={{ fontSize: '0.8rem', color: '#856404', display: 'block', marginBottom: '5px' }}>
+                  ⚠️ Render Free Tier (No Email Support)
+                </span>
+                <strong style={{ fontSize: '1.2rem', color: 'var(--primary)', letterSpacing: '2px' }}>
+                  Your Code: {otp}
+                </strong>
+              </div>
+            )}
             {error && <div style={{ color: 'var(--error)', marginBottom: '1rem', textAlign: 'center' }}>{error}</div>}
             {message && <div style={{ color: 'var(--success)', marginBottom: '1rem', textAlign: 'center' }}>{message}</div>}
             

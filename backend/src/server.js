@@ -4,7 +4,6 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import { nosqlSanitize } from "./middleware/sanitize.middleware.js";
-import rateLimit from "express-rate-limit";
 import connectDB from "./config/db.js";
 import { ENV } from "./config/env.js";
 
@@ -30,20 +29,29 @@ app.use(nosqlSanitize); // Prevents NoSQL injection (Custom Express 5 compatible
 // 🚀 PERFORMANCE MIDDLEWARE
 app.use(compression()); // Compresses response bodies for better performance
 
-// Rate Limiting (Prevents Brute Force/DoS)
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    message: "Too many requests from this IP, please try again after 15 minutes",
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-app.use("/api", limiter);
 
 // Security Middleware
 import cors from "cors";
+
+// Define allowed origins
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:5050"
+];
+
 app.use(cors({ 
-    origin: process.env.CLIENT_URL || "http://localhost:5173", 
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"]
