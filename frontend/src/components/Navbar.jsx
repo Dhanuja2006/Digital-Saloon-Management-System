@@ -21,7 +21,10 @@ const Navbar = () => {
         </Link>
         <div className="nav-links">
           {(!user || user.role === 'Customer') && (
-            <Link to="/salons" className="nav-link">Discover</Link>
+            <>
+              <Link to="/salons" className="nav-link">Discover</Link>
+              <Link to="/ai/recommendation" className="nav-link">AI Recommendations</Link>
+            </>
           )}
           {user ? (
             <>
