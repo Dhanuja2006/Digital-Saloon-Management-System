@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8000/api', // Adjust base URL according to backend routes
+    baseURL: 'https://digital-saloon-management-system-1.onrender.com/api', // Adjust base URL according to backend routes
 });
 
 api.interceptors.request.use((config) => {
