@@ -9,7 +9,7 @@ const serviceSchema = new mongoose.Schema(
         },
         name: {
             type: String,
-            required: true,
+            required: [true, "Service name is required"],
             trim: true,
         },
         description: {
@@ -18,12 +18,16 @@ const serviceSchema = new mongoose.Schema(
         },
         category: {
             type: String,
-            required: true,
-            enum: ["Haircut", "Coloring", "Facial", "Styling", "Spa", "Other"], // Basic categories, can be expanded
+            required: [true, "Service category is required"],
+            enum: {
+                values: ["Haircut", "Coloring", "Facial", "Styling", "Spa", "Other"],
+                message: "{VALUE} is not a valid category"
+            }
         },
         price: {
             type: Number,
-            required: true,
+            required: [true, "Price is required"],
+            min: [0, "Price cannot be negative"],
         },
         priceType: {
             type: String,
@@ -32,7 +36,8 @@ const serviceSchema = new mongoose.Schema(
         },
         duration: {
             type: Number, // duration in minutes
-            required: true,
+            required: [true, "Duration is required"],
+            min: [1, "Duration must be at least 1 minute"],
         },
         isActive: {
             type: Boolean, // For soft delete to preserve booking history

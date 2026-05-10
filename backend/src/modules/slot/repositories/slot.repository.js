@@ -18,7 +18,11 @@ class SlotRepository {
     }
 
     async update(id, updateData) {
-        return await Slot.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+        return await Slot.findByIdAndUpdate(id, updateData, { returnDocument: 'after', runValidators: true });
+    }
+
+    async updateMany(query, updateData) {
+        return await Slot.updateMany(query, updateData);
     }
 
     async deleteMany(query) {

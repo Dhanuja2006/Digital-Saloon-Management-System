@@ -15,12 +15,12 @@ class ServiceRepository {
     }
 
     async update(id, updateData) {
-        return await Service.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+        return await Service.findByIdAndUpdate(id, updateData, { returnDocument: 'after', runValidators: true });
     }
 
     async delete(id) {
         // Soft delete
-        return await Service.findByIdAndUpdate(id, { isActive: false }, { new: true });
+        return await Service.findByIdAndUpdate(id, { isActive: false }, { returnDocument: 'after' });
     }
 }
 

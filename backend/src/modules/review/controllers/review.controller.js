@@ -1,82 +1,74 @@
 import Review from "../models/Review.js";
-import Salon from "../../salon/models/Salon.js";
+import Booking from "../../booking/models/Booking.js";
 
 class ReviewController {
-    async createReview(req, res) {
+    async createReview(req, res, next) {
         try {
             const { salonId, bookingId, rating, comment } = req.body;
-            const customerId = req.user.id;
+            console.log("Create Review Attempt:", { salonId, bookingId, rating, comment, userId: req.user?._id });
+            
+            // Verify booking exists and belongs to user
+            const booking = await Booking.findById(bookingId);
+            if (!booking) {
+                console.log("Booking not found:", bookingId);
+                return res.status(404).json({ message: "Booking not found" });
+            }
 
-            // 1. Validation (Example: In real app, check if booking is completed)
-            // const booking = await Booking.findById(bookingId);
-            // if (!booking || booking.status !== 'Completed') throw Error...
+            if (booking.user.toString() !== req.user._id.toString()) {
+                console.log("User mismatch:", { bookingUser: booking.user, reqUser: req.user._id });
+                return res.status(403).json({ message: "You can only review your own bookings" });
+            }
 
-            // 2. Create Review
+            if (booking.status !== "Completed") {
+                console.log("Booking not completed status:", booking.status);
+                return res.status(400).json({ message: "You can only review completed appointments" });
+            }
+
             const review = await Review.create({
+                userId: req.user._id,
                 salonId,
-                customerId,
                 bookingId,
                 rating,
-                comment,
-            });
-
-            // 3. Update Salon Average Rating
-            const reviews = await Review.find({ salonId, isDeleted: false });
-            const avgRating = reviews.reduce((acc, item) => item.rating + acc, 0) / reviews.length;
-
-            await Salon.findByIdAndUpdate(salonId, {
-                rating: avgRating.toFixed(1),
-                totalReviews: reviews.length,
+                comment
             });
 
             res.status(201).json({ success: true, data: review });
         } catch (error) {
-            res.status(500).json({ success: false, message: error.message });
+            console.error("Create Review Error:", error);
+            if (error.code === 11000) return res.status(400).json({ message: "You have already reviewed this booking" });
+            next(error);
         }
     }
 
-    async getSalonReviews(req, res) {
+    async getSalonReviews(req, res, next) {
         try {
-            const reviews = await Review.find({ salonId: req.params.salonId, isDeleted: false })
-                .populate("customerId", "fullName profileImage")
+            const reviews = await Review.find({ salonId: req.params.salonId })
+                .populate("userId", "fullName profileImage")
                 .sort("-createdAt");
-            res.status(200).json({ success: true, count: reviews.length, data: reviews });
+            res.status(200).json({ success: true, data: reviews });
         } catch (error) {
-            res.status(500).json({ success: false, message: error.message });
+            next(error);
         }
     }
 
-    async updateReview(req, res) {
+    async getAllReviews(req, res, next) {
         try {
-            const review = await Review.findById(req.params.id);
-            if (!review || review.customerId.toString() !== req.user.id) {
-                return res.status(403).json({ message: "Not authorized" });
-            }
-
-            // Limit edit to 24 hours
-            const hoursSinceCreation = (new Date() - review.createdAt) / (1000 * 60 * 60);
-            if (hoursSinceCreation > 24) {
-                return res.status(400).json({ message: "Reviews can only be edited within 24 hours" });
-            }
-
-            const updatedReview = await Review.findByIdAndUpdate(req.params.id, req.body, { new: true });
-            res.status(200).json({ success: true, data: updatedReview });
+            const reviews = await Review.find()
+                .populate("userId", "fullName")
+                .populate("salonId", "salonName")
+                .sort("-createdAt");
+            res.status(200).json({ success: true, data: reviews });
         } catch (error) {
-            res.status(500).json({ success: false, message: error.message });
+            next(error);
         }
     }
 
-    async deleteReview(req, res) {
+    async deleteReview(req, res, next) {
         try {
-            const review = await Review.findById(req.params.id);
-            if (!review || (review.customerId.toString() !== req.user.id && req.user.role !== 'Admin')) {
-                return res.status(403).json({ message: "Not authorized" });
-            }
-
-            await Review.findByIdAndUpdate(req.params.id, { isDeleted: true });
-            res.status(200).json({ success: true, message: "Review deleted (soft delete)" });
+            await Review.findByIdAndDelete(req.params.id);
+            res.status(200).json({ success: true, message: "Review deleted" });
         } catch (error) {
-            res.status(500).json({ success: false, message: error.message });
+            next(error);
         }
     }
 }
