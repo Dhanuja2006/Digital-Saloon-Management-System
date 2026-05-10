@@ -5,6 +5,7 @@ let bucket;
 
 const connectDB = async () => {
     try {
+        console.log("Connecting to MongoDB with URI:", ENV.MONGO_URI);
         await mongoose.connect(ENV.MONGO_URI);
         console.log("MongoDB Connected");
 
@@ -13,10 +14,15 @@ const connectDB = async () => {
             bucketName: "salons",
         });
     } catch (error) {
-        console.error("Database connection failed:", error);
+        console.error("Database connection failed details:", {
+            message: error.message,
+            code: error.code,
+            hostname: error.hostname,
+            stack: error.stack
+        });
         process.exit(1);
     }
 };
 
 export { bucket };
-export default connectDB;
+export default connectDB;

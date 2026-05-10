@@ -35,4 +35,4 @@ export const CustomerReviews = () => <PlaceholderPage title="Reviews & Ratings" 
 export const CustomerFavorites = () => <PlaceholderPage title="Favorites / Saved Salons" description="Bookmarked salons. Quick access." />
 export const CustomerNotifications = () => <PlaceholderPage title="Notifications" description="Booking confirmation. Payment success/failure. Reminders." />
 export const CustomerProfile = () => <PlaceholderPage title="Profile Management" description="Personal details. Saved preferences. Password change." />
-export const CustomerSmartFeatures = () => <PlaceholderPage title="Smart Features Section" description="AI hairstyle recommendations and personalized style matching." />
+export const CustomerSmartFeatures = () => <PlaceholderPage title="Smart Features Section" description="AI hairstyle recommendations, personalized style matching, and virtual try-on history." />
