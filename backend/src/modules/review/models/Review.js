@@ -2,20 +2,21 @@ import mongoose from "mongoose";
 
 const reviewSchema = new mongoose.Schema(
     {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+        },
         salonId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Salon",
             required: true,
         },
-        customerId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-        },
         bookingId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Booking", // Assuming a Booking model exists or will exist
+            ref: "Booking",
             required: true,
+            unique: true,
         },
         rating: {
             type: Number,
@@ -25,20 +26,35 @@ const reviewSchema = new mongoose.Schema(
         },
         comment: {
             type: String,
-            required: true,
             trim: true,
-        },
-        isDeleted: {
-            type: Boolean,
-            default: false,
         },
     },
     { timestamps: true }
 );
 
-// Prevent multiple reviews for the same booking
-reviewSchema.index({ bookingId: 1 }, { unique: true });
+// Update salon rating after review is saved
+reviewSchema.post("save", async function () {
+    const Salon = mongoose.model("Salon");
+    const stats = await mongoose.model("Review").aggregate([
+        { $match: { salonId: this.salonId } },
+        {
+            $group: {
+                _id: "$salonId",
+                avgRating: { $avg: "$rating" },
+                count: { $sum: 1 },
+            },
+        },
+    ]);
 
-const Review = mongoose.model("Review", reviewSchema);
+    if (stats.length > 0) {
+        await Salon.findByIdAndUpdate(this.salonId, {
+            rating: Math.round(stats[0].avgRating * 10) / 10,
+            totalReviews: stats[0].count,
+        });
+    }
 
-export default Review;
+    // Mark booking as reviewed
+    await mongoose.model("Booking").findByIdAndUpdate(this.bookingId, { isReviewed: true });
+});
+
+export default mongoose.model("Review", reviewSchema);

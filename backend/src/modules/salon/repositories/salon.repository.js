@@ -7,27 +7,32 @@ class SalonRepository {
     }
 
     async findById(id) {
-        return await Salon.findById(id).populate("ownerId", "fullName email");
+        if (!id) return null;
+        try {
+            return await Salon.findById(id).populate("ownerId", "fullName email").lean();
+        } catch (err) {
+            return null;
+        }
     }
 
     async findByOwnerId(ownerId) {
-        return await Salon.findOne({ ownerId });
+        return await Salon.findOne({ ownerId }).lean();
     }
 
     async findOne(query) {
-        return await Salon.findOne(query);
+        return await Salon.findOne(query).lean();
     }
 
     async findAll(query = {}) {
-        return await Salon.find(query);
+        return await Salon.find(query).lean();
     }
 
     async update(id, updateData) {
-        return await Salon.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+        return await Salon.findByIdAndUpdate(id, updateData, { returnDocument: 'after', runValidators: true });
     }
 
     async delete(id) {
-        return await Salon.findByIdAndUpdate(id, { isActive: false }, { new: true });
+        return await Salon.findByIdAndUpdate(id, { isActive: false }, { returnDocument: 'after' });
     }
 }
 

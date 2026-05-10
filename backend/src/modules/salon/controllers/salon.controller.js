@@ -3,7 +3,7 @@ import salonService from "../services/salon.service.js";
 class SalonController {
     async createSalon(req, res, next) {
         try {
-            const salon = await salonService.createSalon(req.user.id, req.body);
+            const salon = await salonService.createSalon(req.user, req.body);
             res.status(201).json({
                 success: true,
                 message: "Salon created successfully. Awaiting admin approval.",
@@ -29,7 +29,7 @@ class SalonController {
 
     async getMySalons(req, res, next) {
         try {
-            const salons = await salonService.getMySalons(req.user.id);
+            const salons = await salonService.getMySalons(req.user._id);
             res.status(200).json({
                 success: true,
                 count: salons.length,
@@ -54,7 +54,7 @@ class SalonController {
 
     async updateSalon(req, res, next) {
         try {
-            const salon = await salonService.updateSalon(req.params.id, req.user.id, req.body);
+            const salon = await salonService.updateSalon(req.params.id, req.user._id, req.body);
             res.status(200).json({
                 success: true,
                 message: "Salon updated successfully",
@@ -67,7 +67,7 @@ class SalonController {
 
     async deleteSalon(req, res, next) {
         try {
-            await salonService.deleteSalon(req.params.id, req.user.id);
+            await salonService.deleteSalon(req.params.id, req.user._id);
             res.status(200).json({
                 success: true,
                 message: "Salon deactivated successfully",
@@ -99,6 +99,56 @@ class SalonController {
                 success: true,
                 message: `Salon status updated to ${status}`,
                 data: salon,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async uploadSalonImages(req, res, next) {
+        try {
+            if (!req.files || req.files.length === 0) {
+                return res.status(400).json({ success: false, message: "No images uploaded" });
+            }
+
+            const imagePaths = req.files.map(file => `/uploads/salons/${file.filename}`);
+            const salon = await salonService.addSalonImages(req.params.id, req.user._id, imagePaths);
+
+            res.status(200).json({
+                success: true,
+                message: "Images uploaded successfully",
+                data: salon,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async removeSalonImage(req, res, next) {
+        try {
+            const { imagePath } = req.body;
+            if (!imagePath) {
+                return res.status(400).json({ success: false, message: "Image path is required" });
+            }
+
+            const salon = await salonService.removeSalonImage(req.params.id, req.user._id, imagePath);
+
+            res.status(200).json({
+                success: true,
+                message: "Image removed successfully",
+                data: salon,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getSalonAnalytics(req, res, next) {
+        try {
+            const analytics = await salonService.getSalonAnalytics(req.params.id, req.user._id);
+            res.status(200).json({
+                success: true,
+                data: analytics,
             });
         } catch (error) {
             next(error);

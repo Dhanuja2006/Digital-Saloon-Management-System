@@ -45,9 +45,9 @@ class SlotService {
         }
 
         const dayOfWeek = this._getDayOfWeek(date);
-        let workingHours = salon.workingHours[dayOfWeek];
+        let workingHours = salon.workingHours ? salon.workingHours[dayOfWeek] : null;
 
-        // Fallback: If no working hours are defined, default to 09:00 - 18:00
+        // Fallback: If no working hours are defined for this day, default to 09:00 - 18:00
         if (!workingHours || !workingHours.open || !workingHours.close) {
             workingHours = { open: "09:00", close: "18:00" };
         }
@@ -119,7 +119,7 @@ class SlotService {
 
         // Clean up expired locks automatically before returning results
         const now = new Date();
-        await slotRepository.update(
+        await slotRepository.updateMany(
             { status: "reserved", lockExpiresAt: { $lt: now } },
             { $set: { status: "available", lockExpiresAt: null } }
         );

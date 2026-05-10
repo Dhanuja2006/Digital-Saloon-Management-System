@@ -1,12 +1,17 @@
 import express from "express";
 import salonController from "../controllers/salon.controller.js";
 import { protect, authorize } from "../../../middleware/auth.middleware.js";
+import { salonUpload } from "../../../middleware/salonUpload.js";
 
 const router = express.Router();
 
 // Salon Owner Routes (Move specific routes before parameterized routes)
 router.get("/my-salons", protect, authorize("Salon Owner"), salonController.getMySalons);
 router.post("/", protect, authorize("Salon Owner"), salonController.createSalon);
+
+router.post("/:id/images", protect, authorize("Salon Owner"), salonUpload.array("images", 5), salonController.uploadSalonImages);
+router.delete("/:id/images", protect, authorize("Salon Owner"), salonController.removeSalonImage);
+router.get("/:id/analytics", protect, authorize("Salon Owner"), salonController.getSalonAnalytics);
 
 // Public Routes
 router.get("/", salonController.getSalons);
